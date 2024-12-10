@@ -46,14 +46,14 @@
    
    
    |calc  //Context for pipeline 
-      @0
-         $val2[7:0] = { 4'b0, *ui_in[3:0]};
-         $op[1:0] = *ui_in[5:4];
-         $equals_in = *ui_in[7];
+      
+         
       @1
          $reset = *reset;
          $val1[7:0] = >>1$out[7:0];
-         
+         $val2[7:0] = { 4'b0000, *ui_in[3:0]};
+         $op[1:0] = *ui_in[5:4];
+         $equals_in = *ui_in[7];
                  
          
          $sum[7:0] = $val1[7:0] + $val2[7:0];
@@ -64,9 +64,9 @@
 
          $quot[7:0] = $val1[7:0] / $val2[7:0];
 
-         $valid = (>>1$equals_in == 0 && $equals_in == 1);
+         $valid = ~>>1$equals_in && $equals_in;
          
-         $out[7:0] = $reset ? 8'b0 : 
+         $out[7:0] = $reset ? 8'd0 : 
                         $valid ? 
                           ($op[1] ? ($op[0] ? $quot[7:0] : $prod[7:0]) : 
                                   ($op[0] ? $diff[7:0] : $sum[7:0])):
