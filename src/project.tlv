@@ -39,14 +39,14 @@
 
 
 \TLV my_design()
-   $reset = *reset ;
+   $reset = *uo_in[0] ;
    
    
    
-   $count_speed4[18:0] = (>>1$reset || >>1$count_speed4 == 19'd5 ) ? 19'b0 : >>1$count_speed4 +1 ;
+   $count_speed4[18:0] = (>>1$reset || >>1$count_speed4 == 19'd500000 ) ? 19'b0 : >>1$count_speed4 +1 ;
    $clk_pulse4 = >>1$reset ? 1'b0: $count_speed4 == 19'd5 ? ~>>1$clk_pulse4 : >>1$clk_pulse4 ;
    
-   $count_speed3[19:0] = (>>1$reset || >>1$count_speed3 == 20'd10 ) ? 20'b0 : >>1$count_speed3 +1 ;
+   $count_speed3[19:0] = (>>1$reset || >>1$count_speed3 == 20'd1000000 ) ? 20'b0 : >>1$count_speed3 +1 ;
    $clk_pulse3 = >>1$reset ? 1'b0: $count_speed3 == 20'd10 ? ~>>1$clk_pulse3 : >>1$clk_pulse3 ;
    
    $count_speed2[22:0] = (>>1$reset || >>1$count_speed2 == 23'd5000000 ) ? 23'b0 : >>1$count_speed2 +1 ;
