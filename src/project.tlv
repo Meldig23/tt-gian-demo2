@@ -59,7 +59,7 @@
    
              
    $speed_level[1:0] = >>1$reset ? 2'b0 :  
-               ($right_edge && >>1$led_output == 8'd01) || ($left_edge  && $led_output == 8'd80)
+               ($right_edge && $led_output == 8'd01) || ($left_edge  && $led_output == 8'd80)
                   ? 2'd3
                :  ($right_edge && $led_output == 8'd02) || ($left_edge  && $led_output == 8'd40)
                   ? 2'd2
