@@ -39,8 +39,9 @@
 
 
 \TLV my_design()
-   $reset = *ui_in[0] ;
-   
+    
+     
+   $reset = *ui_in[0];
    
    
    $count_speed4[18:0] = (>>1$reset || >>1$count_speed4 == 19'd500000 ) ? 19'b0 : >>1$count_speed4 +1 ;
@@ -90,22 +91,7 @@
                   //default
                   : >>1$forward;
    
-   // State management
-   $state[1:0] = $reset ? 2'b00 :
-                 ($led_output == 8'b10000000 && $forward && >>1$state == 2'b00) ? 2'b01 : // Missile reached opponent's side
-                 ($led_output == 8'b00000001 && !$forward && >>1$state == 2'b00) ? 2'b01 : // Missile reached player's side
-                 (>>1$player_score > 4'b1000 || >>1$opponent_score > 4'b1000) ? 2'b10 : // Game ends
-                 (>>1$state == 2'b01 && >>1$count_speed1 == 24'd10000000) ? 2'b00 : // Return to play after score display
-                 >>1$state;
-
-   // Score keeping
-   $player_score[3:0] = $reset ? 4'b0 :
-                        ($state == 2'b01 && $led_output == 8'b00000001 && !$forward) ? >>1$player_score + 1 :
-                        >>1$player_score;
-
-   $opponent_score[3:0] = $reset ? 4'b0 :
-                          ($state == 2'b01 && $led_output == 8'b10000000 && $forward) ? >>1$opponent_score + 1 :
-                          >>1$opponent_score;
+   
    
                   
    $left_btn = *ui_in[3];
@@ -115,47 +101,10 @@
    
    
    
-   $digits[3:0] = $player_score[3:0];
-   $segments[7:0] =  
-           $digits ==4'h0 ?
-               8'b00111111 :
-           $digits ==4'h1 ?
-               8'b00000110 :
-           $digits ==4'h2 ?
-               8'b01011011 :
-           $digits ==4'h3 ?
-               8'b01001111 :
-           $digits ==4'h4 ?
-               8'b01100110 :
-           $digits ==4'h5 ?
-               8'b01101101 :
-           $digits ==4'h6 ?
-               8'b01111101 :
-           $digits ==4'h7 ?
-               8'b00000111 :
-           $digits ==4'h8 ?
-               8'b01111111 :
-           $digits ==4'h9 ?
-               8'b01101111 :
-           $digits ==4'ha ?
-               8'b01110111 :
-           $digits ==4'hb ?
-               8'b01111100 :
-           $digits ==4'hc ?
-               8'b00111001 :
-           $digits ==4'hd ?
-               8'b01011110 :
-           $digits ==4'he ?
-               8'b01111001 :
-           //default
-               8'b01110001 ;
-              
-   *uo_out = $state == 2'b01 ? //Score display
-                $segments
-             : $state == 2'b00 ?
-                $led_output 
-             //default
-                : $player_score > $opponent_score ? 8'b00000110 : 8'b01011011 ;
+   
+   *uo_out = $led_output ; 
+   
+   
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
    //*uo_out = 8'b0;
    m5_if_neq(m5_target, FPGA, ['*uio_out = 8'b0;'])
