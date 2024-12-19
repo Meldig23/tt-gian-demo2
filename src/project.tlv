@@ -39,7 +39,7 @@
 
 
 \TLV my_design()
-   $reset = *uo_in[0] ;
+   $reset = *ui_in[0] ;
    
    
    
