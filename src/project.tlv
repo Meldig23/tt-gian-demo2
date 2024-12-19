@@ -37,205 +37,70 @@
    // Include Tiny Tapeout Lab.
    m4_include_lib(['https:/']['/raw.githubusercontent.com/os-fpga/Virtual-FPGA-Lab/5744600215af09224b7235479be84c30c6e50cb7/tlv_lib/tiny_tapeout_lib.tlv'])
 
-// SPI-based TFT Display Example: Displaying Number 7
-
-module tft_display (
-    input wire clk,
-    input wire reset,
-    output wire tft_sck,
-    output wire tft_mosi,
-    output wire tft_dc,  // Data/Command pin
-    output wire tft_cs,  // Chip Select
-    output wire tft_rst, // Reset pin
-    output reg busy      // Busy signal
-);
-
-    // Parameters for screen dimensions
-    parameter WIDTH = 128;
-    parameter HEIGHT = 128;
-
-    // State machine states
-    typedef enum reg [1:0] {
-        INIT = 2'b00,
-        SEND_COMMAND = 2'b01,
-        SEND_DATA = 2'b10,
-        DONE = 2'b11
-    } state_t;
-
-    state_t current_state, next_state;
-
-    // SPI signals
-    reg [7:0] spi_data;
-    reg spi_start;
-    wire spi_done;
-
-    // SPI Module Instantiation
-    spi_controller spi (
-        .clk(clk),
-        .reset(reset),
-        .data_in(spi_data),
-        .start(spi_start),
-        .sck(tft_sck),
-        .mosi(tft_mosi),
-        .done(spi_done)
-    );
-
-    // TFT Control Pins
-    assign tft_cs = 1'b0;  // Always selected (active low)
-    assign tft_rst = ~reset;  // Active low reset
-
-    // Data for displaying number 7 (example bitmap)
-    reg [15:0] frame_buffer [0:WIDTH * HEIGHT - 1];
-
-    integer x, y;
-
-    // Load a simple bitmap of the number "7"
-    initial begin
-        for (y = 0; y < HEIGHT; y = y + 1) begin
-            for (x = 0; x < WIDTH; x = x + 1) begin
-                if ((x > WIDTH / 4 && x < 3 * WIDTH / 4 && y < HEIGHT / 4) ||
-                    (x > 3 * WIDTH / 4 - y / 4)) begin
-                    frame_buffer[y * WIDTH + x] = 16'hFFFF; // White
-                end else begin
-                    frame_buffer[y * WIDTH + x] = 16'h0000; // Black
-                end
-            end
-        end
-    end
-
-    // State Machine Logic
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            current_state <= INIT;
-        end else begin
-            current_state <= next_state;
-        end
-    end
-
-    always @(*) begin
-        case (current_state)
-            INIT: begin
-                // Initialization commands
-                spi_start = 1'b1;
-                spi_data = 8'h01; // Reset command (example)
-                if (spi_done) begin
-                    next_state = SEND_COMMAND;
-                end else begin
-                    next_state = INIT;
-                end
-            end
-            SEND_COMMAND: begin
-                // Example command to set column address
-                spi_start = 1'b1;
-                spi_data = 8'h2A; // Set Column Address command
-                if (spi_done) begin
-                    next_state = SEND_DATA;
-                end else begin
-                    next_state = SEND_COMMAND;
-                end
-            end
-            SEND_DATA: begin
-                // Send pixel data for the frame buffer
-                spi_start = 1'b1;
-                spi_data = frame_buffer[y * WIDTH + x][15:8]; // Upper byte
-                if (spi_done) begin
-                    if (x < WIDTH && y < HEIGHT) begin
-                        x = x + 1;
-                        if (x == WIDTH) begin
-                            x = 0;
-                            y = y + 1;
-                        end
-                    end else begin
-                        next_state = DONE;
-                    end
-                end else begin
-                    next_state = SEND_DATA;
-                end
-            end
-            DONE: begin
-                // Finished displaying
-                busy = 1'b0;
-                next_state = DONE;
-            end
-            default: next_state = INIT;
-        endcase
-    end
-
-endmodule
-
-// Simple SPI Controller Module
-module spi_controller (
-    input wire clk,
-    input wire reset,
-    input wire [7:0] data_in,
-    input wire start,
-    output reg sck,
-    output reg mosi,
-    output reg done
-);
-
-    reg [2:0] bit_counter;
-    reg [7:0] shift_reg;
-    reg active;
-
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            bit_counter <= 3'd0;
-            shift_reg <= 8'd0;
-            active <= 1'b0;
-            done <= 1'b0;
-            sck <= 1'b0;
-            mosi <= 1'b0;
-        end else if (start && !active) begin
-            active <= 1'b1;
-            shift_reg <= data_in;
-            bit_counter <= 3'd0;
-            done <= 1'b0;
-        end else if (active) begin
-            sck <= ~sck;
-            if (sck) begin
-                mosi <= shift_reg[7];
-                shift_reg <= {shift_reg[6:0], 1'b0};
-                bit_counter <= bit_counter + 1;
-                if (bit_counter == 3'd7) begin
-                    active <= 1'b0;
-                    done <= 1'b1;
-                end
-            end
-        end
-    end
-
-endmodule
 
 \TLV my_design()
+   $reset = *reset ;
    
    
    
-   // ==================
-   // |                |
-   // | YOUR CODE HERE |
-   // |                |
-   // ==================
+   $count_speed4[18:0] = (>>1$reset || >>1$count_speed4 == 19'd5 ) ? 19'b0 : >>1$count_speed4 +1 ;
+   $clk_pulse4 = >>1$reset ? 1'b0: $count_speed4 == 19'd5 ? ~>>1$clk_pulse4 : >>1$clk_pulse4 ;
    
-   // Note that pipesignals assigned here can be found under /fpga_pins/fpga.
-   \SV_plus
-      
-       
-       wire busy;
-       
-       // Instantiate the tft_display module
-       tft_display uut (
-           .clk(*clk),
-           .reset(*reset),
-           .tft_sck(*uo_out[4]),
-           .tft_mosi(*uo_out[0]),
-           .tft_dc(*uo_out[1]),
-           .tft_cs(*uo_out[3]),
-           .tft_rst(*uo_out[2]),
-           .busy(busy)
-       );
+   $count_speed3[19:0] = (>>1$reset || >>1$count_speed3 == 20'd10 ) ? 20'b0 : >>1$count_speed3 +1 ;
+   $clk_pulse3 = >>1$reset ? 1'b0: $count_speed3 == 20'd10 ? ~>>1$clk_pulse3 : >>1$clk_pulse3 ;
+   
+   $count_speed2[22:0] = (>>1$reset || >>1$count_speed2 == 23'd5000000 ) ? 23'b0 : >>1$count_speed2 +1 ;
+   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == 23'd5000000 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
+   
+   $count_speed1[23:0] = (>>1$reset || >>1$count_speed1 == 24'd10000000 ) ? 24'b0 : >>1$count_speed1 +1 ;
+   $clk_pulse1 = >>1$reset ? 1'b0: $count_speed1 == 24'd10000000 ? ~>>1$clk_pulse1 : >>1$clk_pulse1 ;
    
    
+             
+   $speed_level[1:0] = >>1$reset ? 2'b0 :  
+               ($right_edge || $left_edge)  && (>>1$led_output == 8'd80 || >>1$led_output == 8'd01)
+                  ? 2'd3
+               :  ($right_edge || $left_edge)  && (>>1$led_output == 8'd40 || >>1$led_output == 8'd02)
+                  ? 2'd2
+               :  ($right_edge || $left_edge)  && (>>1$led_output == 8'd20 || >>1$led_output == 8'd04)
+                  ? 2'd1
+               :  ($right_edge || $left_edge)  && (>>1$led_output == 8'd10 || >>1$led_output == 8'd08)
+                  ? 2'd0
+                  //default
+                  : >>1$speed_level;
+   
+   
+   $clk_pulse = ($speed_level == 2'b11) ? $clk_pulse4 :
+                ($speed_level == 2'b10) ? $clk_pulse3 :
+                ($speed_level == 2'b01) ? $clk_pulse2 :
+                $clk_pulse1; // Default to slowest speed
+   
+   
+   $led_output[7:0] = >>1$reset ? 8'b1 :
+                (!>>1$clk_pulse && $clk_pulse) ?
+                    >>1$forward ? >>1$led_output[7:0] << 1 : >>1$led_output[7:0] >> 1 :
+                    >>1$led_output;
+   
+   
+   $forward = $reset ? 1'b1 :  // forward is right to left when == 1'b1
+               ($right_edge  && $led_output <= 8'd8)
+                  ? 1'b1
+               :  ($left_edge  && $led_output > 8'd8)
+                  ? 1'b0
+                  //default
+                  : >>1$forward;
+   
+   
+                  
+   $left_btn = *ui_in[3];
+   $left_edge = (!>>1$left_btn && $left_btn) ;
+   $right_btn = *ui_in[1];
+   $right_edge = (!>>1$right_btn && $right_btn) ;
+   
+   
+   
+   
+   *uo_out = $led_output ;
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
    //*uo_out = 8'b0;
    m5_if_neq(m5_target, FPGA, ['*uio_out = 8'b0;'])
@@ -277,7 +142,7 @@ module top(input logic clk, input logic reset, input logic [31:0] cyc_cnt, outpu
       #1  // Drive inputs on the B-phase.
          ui_in = 8'h0;
       #10 // Step 5 cycles, past reset.
-         ui_in = 8'hFF;
+         ui_in = 8'hFF; 
       // ...etc.
    end
    */
