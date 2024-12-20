@@ -50,11 +50,11 @@
    $count_speed3[19:0] = (>>1$reset || >>1$count_speed3 == 20'd900000 ) ? 20'b0 : >>1$count_speed3 +1 ;
    $clk_pulse3 = >>1$reset ? 1'b0: $count_speed3 == 20'd900000 ? ~>>1$clk_pulse3 : >>1$clk_pulse3 ;
    
-   $count_speed2[22:0] = (>>1$reset || >>1$count_speed2 == 23'd1100000 ) ? 23'b0 : >>1$count_speed2 +1 ;
-   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == 23'd1100000 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
+   $count_speed2[22:0] = (>>1$reset || >>1$count_speed2 == 23'd1300000 ) ? 23'b0 : >>1$count_speed2 +1 ;
+   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == 23'd1300000 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
    
-   $count_speed1[23:0] = (>>1$reset || >>1$count_speed1 == 24'd1300000 ) ? 24'b0 : >>1$count_speed1 +1 ;
-   $clk_pulse1 = >>1$reset ? 1'b0: $count_speed1 == 24'd1300000 ? ~>>1$clk_pulse1 : >>1$clk_pulse1 ;
+   $count_speed1[23:0] = (>>1$reset || >>1$count_speed1 == 24'd2000000 ) ? 24'b0 : >>1$count_speed1 +1 ;
+   $clk_pulse1 = >>1$reset ? 1'b0: $count_speed1 == 24'd2000000 ? ~>>1$clk_pulse1 : >>1$clk_pulse1 ;
    
    
              
