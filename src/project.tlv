@@ -78,7 +78,8 @@
    
    
    $led_output[7:0] = >>1$reset ? 8'b00001000 :
-                (!>>2$clk_pulse && >>1$clk_pulse) ?
+                (>>1$state != $state && $state == 2'b0) ? 8'b00001000
+                :(!>>2$clk_pulse && >>1$clk_pulse) ?
                     >>1$forward ? >>1$led_output[7:0] << 1 : >>1$led_output[7:0] >> 1 :
                     >>1$led_output;
    
@@ -92,17 +93,52 @@
                   : >>1$forward;
    
    
-   
+   // Timer for waiting state
+   $wait_counter[23:0] = >>1$reset || >>1$state == 2'b00 ? 24'b0 :
+                         (>>1$state == 2'b01 && >>1$wait_counter < 24'd10000000) ? >>1$wait_counter + 1 :
+                         24'b0;
+
+                         
+   // Scoring logic
+   $player_scores[3:0] = >>1$reset ? 4'b0000 :
+                    (>>1$led_output == 8'b00000001 && !$left_edge) ? >>1$player_scores + 4'b0001 :
+                    >>1$player_scores;
+   // State machine for gameplay
+   $state[1:0] = >>1$reset ? 2'b00 :
+                (>>1$player_scores != $player_scores) ? 2'b01 : // Display score state
+                (>>1$state == 2'b01 && $wait_counter == 24'd10000000) ? 2'b00 : // Return to gameplay after waiting
+                ($player_scores >= 4'b0111) ? 2'b10 : // Game over state
+                >>1$state; // Maintain current state
+                
                   
    $left_btn = *ui_in[3];
    $left_edge = (!>>1$left_btn && $left_btn) ;
    $right_btn = *ui_in[1];
    $right_edge = (!>>1$right_btn && $right_btn) ;
    
+   $digits[3:0] = ($state == 2'b01 || $state == 2'b10) ? $player_scores : 4'b0001; // Display scores or winner ; // Display scores or winner
+   $segments[7:0] =  
+           $digits == 4'h0 ? 8'b00111111 :
+           $digits == 4'h1 ? 8'b00000110 :
+           $digits == 4'h2 ? 8'b01011011 :
+           $digits == 4'h3 ? 8'b01001111 :
+           $digits == 4'h4 ? 8'b01100110 :
+           $digits == 4'h5 ? 8'b01101101 :
+           $digits == 4'h6 ? 8'b01111101 :
+           $digits == 4'h7 ? 8'b00000111 :
+           $digits == 4'h8 ? 8'b01111111 :
+           $digits == 4'h9 ? 8'b01101111 :
+           $digits == 4'ha ? 8'b01110111 :
+           $digits == 4'hb ? 8'b01111100 :
+           $digits == 4'hc ? 8'b00111001 :
+           $digits == 4'hd ? 8'b01011110 :
+           $digits == 4'he ? 8'b01111001 :
+           8'b01110001; // Default
    
    
-   
-   *uo_out = $led_output ; 
+   *uo_out = $state == 2'b00 ? $led_output 
+             : $state == 2'b01 ? $segments
+             : 8'b00000110; 
    
    
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
