@@ -58,7 +58,7 @@
    
    
              
-   $speed_level[1:0] = >>1$reset ? 2'b0 :  
+   $speed_level[1:0] = >>1$reset || (>>2$state == 2'b01 && >>3$state == 2'b10) ? 2'b0 :  
                ($right_edge && $led_output == 8'h01) || ($left_edge  && $led_output == 8'h80)
                   ? 2'd3
                :  ($right_edge && $led_output == 8'h02) || ($left_edge  && $led_output == 8'h40)
@@ -87,7 +87,7 @@
                           >>1$led_output ;
    
    
-   $forward = $reset ? 1'b1 :  // forward is right to left when == 1'b1
+   $forward = >>1$reset || (>>2$state == 2'b01 && >>3$state == 2'b10) ? 1'b1 :  // forward is right to left when == 1'b1
                ($right_edge  && $led_output <= 8'd8)
                   ? 1'b1
                :  ($left_edge  && $led_output > 8'd8)
