@@ -50,8 +50,8 @@
    $count_speed3[19:0] = (>>1$reset || >>1$count_speed3 == 20'd900000 ) ? 20'b0 : >>1$count_speed3 +1 ;
    $clk_pulse3 = >>1$reset ? 1'b0: $count_speed3 == 20'd900000 ? ~>>1$clk_pulse3 : >>1$clk_pulse3 ;
    
-   $count_speed2[22:0] = (>>1$reset || >>1$count_speed2 == 23'd1300000 ) ? 23'b0 : >>1$count_speed2 +1 ;
-   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == 23'd1300000 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
+   $count_speed2[20:0] = (>>1$reset || >>1$count_speed2 == 21'd1700000 ) ? 21'b0 : >>1$count_speed2 +1 ;
+   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == 21'd1700000 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
    
    $count_speed1[23:0] = (>>1$reset || >>1$count_speed1 == 24'd2000000 ) ? 24'b0 : >>1$count_speed1 +1 ;
    $clk_pulse1 = >>1$reset ? 1'b0: $count_speed1 == 24'd2000000 ? ~>>1$clk_pulse1 : >>1$clk_pulse1 ;
@@ -81,7 +81,7 @@
                             ? 8'b00001000 :
                    
                       >>2$state == 2'b10 ? 
-                            >>3$score1[7:0]
+                            >>3$score[7:0]
                       :(!>>2$clk_pulse && >>1$clk_pulse) ?
                           >>1$forward ? >>1$led_output[7:0] << 1 : >>1$led_output[7:0] >> 1 :
                           >>1$led_output ;
@@ -97,7 +97,7 @@
    
    
    $state[1:0] = >>1$reset ? 2'b01 
-                 : >>1$led_output == 8'b0 ? //Score display
+                 : (>>1$led_output == 8'b0 && >>1$state == 2'b10) ? //Score display
                        2'b10
                  : (>>1$state == 2'b10 && >>1$wait_counter == 24'd10000000)  ? // Normal gameplay
                        2'b01
@@ -109,11 +109,17 @@
                       24'b0;
 
                        
-   $score1[7:0] = >>1$reset ? 8'd0 : 
+   $score[7:0] = >>1$reset ? 8'd0 : 
              (>>2$led_output == 8'h80  && >>1$led_output == 8'b0) 
-                   ? >>1$score1+1
+                ? >>1$score == 0 
+                   ? 8'b00010000 // Start score setting
+                   : >>1$score << 1 // Increase score
+             : (>>2$led_output == 8'h01  && >>1$led_output == 8'b0)
+                ? >>1$score == 0 
+                   ? 8'b00001000 // Start score setting
+                   : >>1$score >> 1 // Increase score
                    
-                   : >>1$score1 ;
+                   : >>1$score ;
    
    
    
